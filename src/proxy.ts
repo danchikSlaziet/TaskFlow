@@ -5,7 +5,7 @@ import { ROUTES, PROTECTED_ROUTES, AUTH_ROUTES } from '@/shared/config'
 const secretKey = process.env.JWT_SECRET || 'fallback-secret-key-change-it-in-env'
 const encodedKey = new TextEncoder().encode(secretKey)
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => path.startsWith(route)) // будут вложенные страницы => /projects/cuid123
