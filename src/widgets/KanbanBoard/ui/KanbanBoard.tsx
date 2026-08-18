@@ -22,6 +22,7 @@ import { Button } from '@/shared/ui/button'
 import { KanbanColumn, type ColumnData } from './KanbanColumn'
 import { TaskCard, type TaskItem, type PriorityType } from '@/entities/task'
 import { updateTaskOrderAction } from '@/features/task-drag-and-drop/index.server'
+import { TaskDetailsSheet } from '@/features/task-details'
 
 interface KanbanBoardProps {
   projectId: string
@@ -34,7 +35,20 @@ export function KanbanBoard({ projectId, initialColumns }: KanbanBoardProps) {
   const [selectedPriority, setSelectedPriority] = useState<PriorityType | 'ALL'>('ALL')
   const [, startTransition] = useTransition()
 
+  const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const handleTaskClick = (task: TaskItem) => {
+    setSelectedTask(task)
+    setIsSheetOpen(true)
+  }
+
   const [columns, setColumns] = useState<ColumnData[]>(initialColumns)
+
+  const [prevInitialColumns, setPrevInitialColumns] = useState(initialColumns)
+  if (prevInitialColumns !== initialColumns) {
+    setPrevInitialColumns(initialColumns)
+    setColumns(initialColumns)
+  }
 
   // настройка сенсоров для пк и мобилки
   const sensors = useSensors(
@@ -233,7 +247,7 @@ export function KanbanBoard({ projectId, initialColumns }: KanbanBoardProps) {
       >
         <div className="flex gap-4 overflow-x-auto -mx-4 sm:-mx-8 px-4 sm:px-8 pb-6 items-start min-h-[500px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {filteredColumns.map((column) => (
-            <KanbanColumn key={column.id} column={column} projectId={projectId} />
+            <KanbanColumn onTaskClick={handleTaskClick} key={column.id} column={column} projectId={projectId} />
           ))}
         </div>
         <DragOverlay>
@@ -244,6 +258,14 @@ export function KanbanBoard({ projectId, initialColumns }: KanbanBoardProps) {
           ) : null}
         </DragOverlay>
       </DndContext>
+      <TaskDetailsSheet
+        key={selectedTask?.id}
+        task={selectedTask}
+        columns={columns.map((c) => ({ id: c.id, name: c.name }))}
+        projectId={projectId}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+      />
     </div>
   )
 }

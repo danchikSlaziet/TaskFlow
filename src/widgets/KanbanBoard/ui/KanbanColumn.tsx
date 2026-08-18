@@ -17,9 +17,10 @@ export interface ColumnData {
 interface KanbanColumnProps {
   column: ColumnData
   projectId: string
+  onTaskClick?: (task: TaskItem) => void
 }
 
-export function KanbanColumn({ column, projectId }: KanbanColumnProps) {
+export function KanbanColumn({ column, projectId, onTaskClick }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: column.id,
     data: {
@@ -28,11 +29,7 @@ export function KanbanColumn({ column, projectId }: KanbanColumnProps) {
     },
   })
   const tasksString = column.tasks.map((t) => t.id).join(',')
-  const taskIds = useMemo(() => column.tasks.map((t) => t.id), [tasksString])
-  // const taskIds = useMemo(
-  //   () => column.tasks.map((t) => t.id),
-  //   [column.tasks.map((t) => t.id).join(',')] // мемоизирует сравнивая примитивы, а не тупо ссылки на массивы (одни и те же)
-  // )
+  const taskIds = useMemo(() => column.tasks.map((t) => t.id), [tasksString]) // мемоизирует сравнивая примитивы, а не тупо ссылки на массивы (одни и те же)
 
   return (
     <div
@@ -48,11 +45,10 @@ export function KanbanColumn({ column, projectId }: KanbanColumnProps) {
         </div>
       </div>
 
-      {/* список задач колонки с сортировкой */}
       <div className="flex-1 space-y-2.5 overflow-y-auto overflow-x-hidden min-h-[150px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {column.tasks.map((task) => (
-            <SortableTaskCard key={task.id} task={task} />
+            <SortableTaskCard onTaskClick={onTaskClick} key={task.id} task={task} />
           ))}
         </SortableContext>
       </div>

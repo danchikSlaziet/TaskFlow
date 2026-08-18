@@ -56,6 +56,7 @@ model Task {
   description String?
   order       Float
   priority    Priority @default(MEDIUM)
+  dueDate     DateTime? 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -64,6 +65,16 @@ model Task {
 
   assigneeId String?
   assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  subtasks Subtask[]
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  title     String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
 model Document {

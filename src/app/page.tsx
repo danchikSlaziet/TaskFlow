@@ -1,7 +1,12 @@
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">TaskFlow</h1>
-    </main>
-  )
+import { redirect } from 'next/navigation'
+import { verifySession } from '@/shared/lib/auth'
+
+export default async function HomePage() {
+  const { isAuth } = await verifySession()
+
+  if (isAuth) {
+    redirect('/projects')
+  } else {
+    redirect('/login')
+  }
 }
