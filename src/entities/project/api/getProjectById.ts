@@ -9,13 +9,14 @@ export async function getProjectById(projectId: string, userId: string) {
     },
     include: {
       columns: {
-        orderBy: {
-          order: 'asc',
-        },
+        orderBy: { order: 'asc' },
         include: {
           tasks: {
-            orderBy: {
-              order: 'asc',
+            orderBy: { order: 'asc' },
+            include: {
+              subtasks: {
+                orderBy: { createdAt: 'asc' },
+              },
             },
           },
         },

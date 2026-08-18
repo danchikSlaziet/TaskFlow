@@ -7,12 +7,13 @@ import { useMemo } from 'react'
 
 interface SortableTaskCardProps {
   task: TaskItem
+  onTaskClick?: (task: TaskItem) => void
 }
 
 const customAnimateLayoutChanges: AnimateLayoutChanges = (args) =>
   defaultAnimateLayoutChanges({ ...args, wasDragging: true })
 
-export function SortableTaskCard({ task }: SortableTaskCardProps) {
+export function SortableTaskCard({ task, onTaskClick }: SortableTaskCardProps) {
   const sortableData = useMemo(() => ({ type: 'Task', task }), [task])
 
   const {
@@ -39,6 +40,7 @@ export function SortableTaskCard({ task }: SortableTaskCardProps) {
         task={task}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
+        onClick={() => onTaskClick?.(task)}
       />
     </div>
   )
