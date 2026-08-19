@@ -1,16 +1,49 @@
 services:
-  postgres:
+  taskflow-db:
     image: postgres:16-alpine
     container_name: taskflow-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: taskflow
-      POSTGRES_PASSWORD: taskflow
-      POSTGRES_DB: taskflow
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-taskflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskflow_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-taskflow}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - taskflow_pg_data:/var/lib/postgresql/data
+    networks:
+      - taskflow-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-taskflow} -d ${POSTGRES_DB:-taskflow}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  taskflow-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskflow-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-taskflow}:${POSTGRES_PASSWORD:-taskflow_secure_password}@taskflow-db:5432/${POSTGRES_DB:-taskflow}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      APP_URL: https://taskflow.finance67.ru
+    depends_on:
+      taskflow-db:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+
+networks:
+  taskflow-network:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  taskflow_pg_data:

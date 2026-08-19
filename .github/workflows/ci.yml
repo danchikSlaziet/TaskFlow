@@ -34,3 +34,37 @@ jobs:
 
       - name: Build Next.js
         run: npm run build
+
+  deploy:
+    name: Deploy to VPS
+    needs: lint-and-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute remote SSH commands
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd /root/TaskFlow
+            git checkout main
+            git pull origin main
+
+            # Автоматическая генерация .env из GitHub Secrets
+            cat << 'EOF' > .env
+            NODE_ENV=production
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@taskflow-db:5432/${{ secrets.POSTGRES_DB }}?schema=public
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            APP_URL=https://taskflow.finance67.ru
+            EOF
+
+            docker compose up -d --build
+            docker compose exec taskflow-app npx prisma migrate deploy
+            docker image prune -f
