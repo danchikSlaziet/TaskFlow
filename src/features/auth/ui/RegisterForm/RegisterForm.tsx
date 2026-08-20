@@ -13,9 +13,10 @@ import {
   CardTitle,
 } from '@/shared/ui/card'
 import { Kanban } from 'lucide-react'
+import { VerifyCodeModal } from '../VerifyCodeModal/VerifyCodeModal'
 
 export function RegisterForm() {
-  const { form, error, isLoading, handleSubmit } = useRegisterForm()
+  const { form, error, isLoading, handleSubmit, verifyEmail, isVerifyModalOpen, closeVerifyModal } = useRegisterForm()
   const { register, formState: { errors } } = form
 
   return (
@@ -100,6 +101,11 @@ export function RegisterForm() {
           </CardFooter>
         </form>
       </Card>
+      <VerifyCodeModal
+        email={verifyEmail}
+        isOpen={isVerifyModalOpen}
+        onClose={closeVerifyModal}
+      />
     </div>
   )
 }
