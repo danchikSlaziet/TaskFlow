@@ -16,17 +16,16 @@ export function VersionGuard() {
           cache: 'no-store',
         })
 
-        const etag = response.headers.get('ETag') || response.headers.get('x-deployment-id')
-        if (!etag) return
-
+        const buildId = response.headers.get('x-build-id')
+        if (!buildId) return
         if (!initialEtagRef.current) {
-          // запоминаем ETag при старте
-          initialEtagRef.current = etag
-        } else if (initialEtagRef.current !== etag) {
-          // ETag на серваке изменился — обновляем страницу
+          // запоминаем версию при старте
+          initialEtagRef.current = buildId
+        } else if (initialEtagRef.current !== buildId) {
+          // выкатили новый релиз — обновляем страницу
           window.location.reload()
         }
-      } catch(e) {
+      } catch (e) {
         console.log(e)
       }
     }

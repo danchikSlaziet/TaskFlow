@@ -1,7 +1,23 @@
 import type { NextConfig } from "next";
 
+// Фиксируется один раз при старте сервера/сборки
+const BUILD_ID = process.env.BUILD_ID || Date.now().toString();
+
 const nextConfig: NextConfig = {
-  output: "standalone", // только необход.зависимости в сборку
+  output: "standalone",
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "x-build-id",
+            value: BUILD_ID,
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
