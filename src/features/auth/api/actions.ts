@@ -9,6 +9,7 @@ import {
   type LoginInput,
   type RegisterInput,
 } from '@/entities/user'
+import { sendVerificationCodeEmail } from '@/shared/lib/email'
 
 export async function registerAction(data: RegisterInput) {
   try {
@@ -24,23 +25,51 @@ export async function registerAction(data: RegisterInput) {
       where: { email },
     })
 
-    if (existingUser) {
+    if (existingUser && existingUser.isVerified) {
       return { success: false, error: 'Пользователь с таким email уже существует' }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await prisma.user.create({
+    let user = existingUser
+
+    if (existingUser && !existingUser.isVerified) {
+      user = await prisma.user.update({
+        where: { email },
+        data: {
+          name: name || null,
+          password: hashedPassword,
+        },
+      })
+    } else {
+      user = await prisma.user.create({
+        data: {
+          name: name || null,
+          email,
+          password: hashedPassword,
+          isVerified: false,
+        },
+      })
+    }
+
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+
+    await prisma.verificationCode.deleteMany({ where: { email } })
+    await prisma.verificationCode.create({
       data: {
-        name: name || null,
         email,
-        password: hashedPassword,
+        code,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       },
     })
 
-    await createSession(user.id)
+    const emailRes = await sendVerificationCodeEmail(email, code)
+    if (!emailRes.success) {
+      return { success: false, error: 'Не удалось отправить письмо с кодом подтверждения' }
+    }
 
-    return { success: true }
+    return { success: true, requiresVerification: true, email: user.email }
   }
   catch (err) {
     console.error('Register error:', err)
@@ -72,8 +101,29 @@ export async function loginAction(data: LoginInput) {
       return { success: false, error: 'Неверный email или пароль' }
     }
 
-    await createSession(user.id)
+    if (!user.isVerified) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
+      await prisma.verificationCode.deleteMany({ where: { email } })
+      await prisma.verificationCode.create({
+        data: {
+          email,
+          code,
+          expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+        },
+      })
+      const emailRes = await sendVerificationCodeEmail(email, code)
+      if (!emailRes.success) {
+        return { success: false, error: 'Не удалось отправить письмо с кодом подтверждения' }
+      }
+      return {
+        success: false,
+        error: 'Email не подтвержден. Мы отправили новый код на вашу почту.',
+        requiresVerification: true,
+        email: user.email,
+      }
+    }
 
+    await createSession(user.id)
     return { success: true }
   }
   catch (err) {
@@ -90,5 +140,70 @@ export async function logoutAction() {
   catch (err) {
     console.error('Logout error:', err)
     return { success: false, error: 'Ошибка сервера. Повторите попытку позже.' }
+  }
+}
+
+export async function verifyCodeAction({ email, code }: { email: string; code: string }) {
+  try {
+    const record = await prisma.verificationCode.findFirst({
+      where: { email, code },
+    })
+
+    if (!record) {
+      return { success: false, error: 'Неверный код подтверждения' }
+    }
+
+    if (record.expiresAt < new Date()) {
+      return { success: false, error: 'Срок действия кода истек. Запросите новый.' }
+    }
+
+    const user = await prisma.user.update({
+      where: { email },
+      data: { isVerified: true },
+    })
+
+    // удаляем использованные коды для этого email
+    await prisma.verificationCode.deleteMany({ where: { email } })
+
+    await createSession(user.id)
+    return { success: true }
+  } catch (err) {
+    console.error('Verify code error:', err)
+    return { success: false, error: 'Ошибка сервера. Повторите попытку позже.' }
+  }
+}
+
+export async function resendCodeAction(email: string) {
+  try {
+    const user = await prisma.user.findUnique({ where: { email } })
+
+    if (!user) {
+      return { success: false, error: 'Пользователь не найден' }
+    }
+
+    if (user.isVerified) {
+      return { success: false, error: 'Email уже подтвержден' }
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+
+    await prisma.verificationCode.deleteMany({ where: { email } })
+    await prisma.verificationCode.create({
+      data: {
+        email,
+        code,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    })
+
+    const emailRes = await sendVerificationCodeEmail(email, code)
+    if (!emailRes.success) {
+      return { success: false, error: 'Не удалось отправить письмо с кодом подтверждения' }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Resend code error:', err)
+    return { success: false, error: 'Не удалось отправить код' }
   }
 }

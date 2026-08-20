@@ -1,38 +1,39 @@
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { registerSchema, type RegisterInput } from '@/entities/user'
-import { ROUTES } from '@/shared/config'
 import { registerAction } from '../../api/actions'
 
 export function useRegisterForm() {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false)
+  const [verifyEmail, setVerifyEmail] = useState('')
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
   })
 
-  const onSubmit = form.handleSubmit(async (data: RegisterInput) => {
+  const onSubmit = form.handleSubmit((data: RegisterInput) => {
     setError(null)
 
-    try {
-      const response = await registerAction(data)
-
-      if (!response.success) {
-        setError(response.error || 'Произошла ошибка при регистрации')
-        return
+    startTransition(async () => {
+      try {
+        const response = await registerAction(data)
+        if (response.requiresVerification && response.email) {
+          setVerifyEmail(response.email)
+          setIsVerifyModalOpen(true)
+          return
+        }
+        if (!response.success) {
+          setError(response.error || 'Произошла ошибка при регистрации')
+          return
+        }
+      } catch {
+        setError('Не удалось связаться с сервером')
       }
-
-      startTransition(() => {
-        router.push(ROUTES.PROJECTS) 
-        router.refresh() // чтобы кука точно "вшилась"
-      }) 
-    } catch {
-      setError('Не удалось связаться с сервером')
-    }
+    })
   })
 
   return {
@@ -40,5 +41,8 @@ export function useRegisterForm() {
     error,
     isLoading: form.formState.isSubmitting || isPending,
     handleSubmit: onSubmit,
+    isVerifyModalOpen,
+    verifyEmail,
+    closeVerifyModal: () => setIsVerifyModalOpen(false)
   }
 }
