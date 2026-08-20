@@ -11,6 +11,9 @@ export function useLoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false)
+  const [verifyEmail, setVerifyEmail] = useState('')
+
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   })
@@ -21,14 +24,18 @@ export function useLoginForm() {
     try {
       const response = await loginAction(data)
 
+      if (response.requiresVerification && response.email) {
+        setVerifyEmail(response.email)
+        setIsVerifyModalOpen(true)
+        return
+      }
       if (!response.success) {
         setError(response.error || 'Произошла ошибка при входе')
         return
       }
-
-      startTransition(() => { // для isPending true до тех пор пока не откроется projects
+      startTransition(() => {
         router.push(ROUTES.PROJECTS)
-        router.refresh() // чтобы кука точно "вшилась"
+        router.refresh()
       })
     } catch {
       setError('Не удалось связаться с сервером')
@@ -40,5 +47,8 @@ export function useLoginForm() {
     error,
     isLoading: form.formState.isSubmitting || isPending,
     handleSubmit: onSubmit,
+    isVerifyModalOpen,
+    verifyEmail,
+    closeVerifyModal: () => setIsVerifyModalOpen(false)
   }
 }

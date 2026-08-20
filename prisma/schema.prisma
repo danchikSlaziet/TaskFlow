@@ -10,11 +10,22 @@ datasource db {
   provider = "postgresql"
 }
 
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6-значный код
+  expiresAt DateTime // now() + 15 минут
+  createdAt DateTime @default(now())
+
+  @@unique([email, code])
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
   name      String?
   password  String
+  isVerified    Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
