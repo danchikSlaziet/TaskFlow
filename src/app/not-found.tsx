@@ -3,6 +3,7 @@ import {  ArrowLeft, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 
 export default function NotFound() {
+  
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
       <div className="mx-auto flex max-w-md flex-col items-center">
