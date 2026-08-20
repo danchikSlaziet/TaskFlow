@@ -1,8 +1,15 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function sendVerificationCodeEmail(email: string, code: string) {
+  const apiKey = process.env.RESEND_API_KEY
+
+  if (!apiKey) {
+    console.error('RESEND_API_KEY is not defined')
+    return { success: false, error: 'Почтовый сервис не настроен' }
+  }
+
+  const resend = new Resend(apiKey)
+
   try {
     const { data, error } = await resend.emails.send({
       from: 'TaskFlow <noreply@taskflow.finance67.ru>',
