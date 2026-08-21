@@ -5,7 +5,7 @@ export type PriorityType = z.infer<typeof priorityEnum>
 
 export const createTaskSchema = z.object({
   title: z.string().min(1, 'Название задачи не может быть пустым'),
-  description: z.string().optional().or(z.literal('')),
+  description: z.any().optional(), // JSONContent (ProseMirror doc)
   priority: priorityEnum,
   columnId: z.string().min(1, 'Укажите колонку'),
 })
@@ -13,7 +13,7 @@ export const createTaskSchema = z.object({
 export const updateTaskDetailsSchema = z.object({
   taskId: z.string().min(1, 'ID задачи обязателен'),
   title: z.string().min(1, 'Название задачи не может быть пустым'),
-  description: z.string().optional().or(z.literal('')),
+  description: z.any().optional(), // JSONContent (ProseMirror doc)
   priority: priorityEnum,
   columnId: z.string().min(1, 'Укажите колонку'),
   dueDate: z.string().nullable().optional(),

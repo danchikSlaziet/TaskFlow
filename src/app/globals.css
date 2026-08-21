@@ -121,10 +121,62 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
+}
+
+/* Tiptap ProseMirror styles */
+.ProseMirror {
+  @apply outline-none min-h-[120px] p-3 text-sm leading-relaxed;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply float-left text-muted-foreground/50 pointer-events-none h-0;
+}
+
+.ProseMirror h1 {
+  @apply text-xl font-bold my-2;
+}
+
+.ProseMirror h2 {
+  @apply text-lg font-semibold my-2;
+}
+
+.ProseMirror h3 {
+  @apply text-base font-semibold my-1;
+}
+
+.ProseMirror ul {
+  @apply list-disc pl-6;
+}
+
+.ProseMirror ol {
+  @apply list-decimal pl-6;
+}
+
+.ProseMirror code {
+  @apply bg-muted rounded px-1 py-0.5 text-xs font-mono;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-2 border-border pl-4 text-muted-foreground italic;
+}
+
+.ProseMirror s {
+  @apply line-through;
+}
+
+.ProseMirror hr {
+  @apply border-border my-3;
+}
+
+.ProseMirror img {
+  @apply rounded-xl max-w-full h-auto my-3 border border-border/60 shadow-sm transition-transform;
 }
