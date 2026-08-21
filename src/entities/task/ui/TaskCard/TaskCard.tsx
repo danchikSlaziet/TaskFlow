@@ -12,7 +12,7 @@ export interface SubtaskItem {
 export interface TaskItem {
   id: string
   title: string
-  description?: JSONContent | null
+  description?: JSONContent | string | null
   priority: PriorityType
   order: number
   columnId: string
