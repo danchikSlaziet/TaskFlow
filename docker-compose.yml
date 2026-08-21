@@ -40,6 +40,8 @@ services:
         condition: service_healthy
     networks:
       - taskflow-network
+    volumes:
+      - taskflow_uploads_data:/app/public/uploads
 
 networks:
   taskflow-network:
@@ -47,3 +49,4 @@ networks:
 
 volumes:
   taskflow_pg_data:
+  taskflow_uploads_data:

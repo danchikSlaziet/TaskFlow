@@ -64,7 +64,7 @@ model Column {
 model Task {
   id          String   @id @default(cuid())
   title       String
-  description String?
+  description Json?
   order       Float
   priority    Priority @default(MEDIUM)
   dueDate     DateTime? 

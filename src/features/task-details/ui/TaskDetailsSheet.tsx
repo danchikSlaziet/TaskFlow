@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Calendar } from '@/shared/ui/calendar'
 import { ru } from 'date-fns/locale'
+import type { JSONContent } from '@tiptap/react'
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 import {
   Calendar as CalendarIcon,
@@ -34,8 +37,17 @@ import {
   createSubtaskAction,
   toggleSubtaskAction,
   deleteSubtaskAction,
+  uploadFileAction,
 } from '../api/actions'
 import { useDebounce } from '@/shared/lib/useDebounce'
+
+const TiptapEditor = dynamic(
+  () => import('@/shared/ui/tiptap-editor').then((m) => m.TiptapEditor),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="min-h-[160px] w-full rounded-xl" />,
+  }
+)
 
 interface TaskDetailsSheetProps {
   task: TaskItem | null
@@ -87,7 +99,14 @@ export function TaskDetailsSheet({
   const [localTask, setLocalTask] = useState<TaskItem | null>(task)
 
   const debouncedTitle = useDebounce(localTask?.title ?? '', 500)
-  const debouncedDescription = useDebounce(localTask?.description ?? '', 500)
+  const debouncedDescription = useDebounce(
+    localTask?.description
+      ? (typeof localTask.description === 'string'
+        ? localTask.description
+        : JSON.stringify(localTask.description))
+      : '',
+    500
+  )
   const isMountedRef = useRef(false)
 
   // Дебаунс для автосохранения текстовых полей
@@ -104,7 +123,7 @@ export function TaskDetailsSheet({
           {
             taskId: localTask.id,
             title: debouncedTitle,
-            description: debouncedDescription,
+            description: debouncedDescription || null,
             priority: localTask.priority,
             columnId: localTask.columnId,
             dueDate: localTask.dueDate ? new Date(localTask.dueDate).toISOString() : null,
@@ -138,7 +157,11 @@ export function TaskDetailsSheet({
           {
             taskId: updated.id,
             title: updated.title,
-            description: updated.description || '',
+            description: updated.description
+              ? (typeof updated.description === 'string'
+                ? updated.description
+                : JSON.stringify(updated.description))
+              : null,
             priority: updated.priority,
             columnId: updated.columnId,
             dueDate: updated.dueDate ? new Date(updated.dueDate).toISOString() : null,
@@ -501,11 +524,11 @@ export function TaskDetailsSheet({
             <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <AlignLeft className="h-3.5 w-3.5" /> Описание
             </label>
-            <Textarea
-              value={localTask.description || ''}
-              onChange={(e) => handleTextUpdate({ description: e.target.value })}
+            <TiptapEditor
+              onUpload={uploadFileAction}
+              value={localTask.description as JSONContent | null}
+              onChange={(json) => handleTextUpdate({ description: json })}
               placeholder="Добавьте подробности, заметки или требования..."
-              className="min-h-[120px] resize-none text-sm bg-card/40 border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary/40 rounded-xl leading-relaxed p-3"
             />
           </div>
 
