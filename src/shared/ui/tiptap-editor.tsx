@@ -216,10 +216,14 @@ export function TiptapEditor({
           editor={editor}
           options={{ placement: 'top' }}
           shouldShow={({ editor }) => {
-            // выделено изображение — скрываем текстовое меню
+            // скрываем для изображений
             if (editor.isActive('image')) return false
-            // текст или ссылка - показываем
-            return !editor.state.selection.empty || editor.isActive('link')
+            // скрываем для прикрепленных PDF файлов
+            const href = editor.getAttributes('link').href as string | undefined
+            if (href?.toLowerCase().endsWith('.pdf')) return false
+
+            // только если выделен текст
+            return !editor.state.selection.empty
           }}
           className="flex items-center gap-0.5 rounded-lg border border-border bg-popover/95 backdrop-blur shadow-md px-1.5 py-1 z-50"
         >
