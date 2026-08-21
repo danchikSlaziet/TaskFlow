@@ -12,7 +12,7 @@ export interface SubtaskItem {
 export interface TaskItem {
   id: string
   title: string
-  description?: JSONContent | string | null
+  description?: unknown // дальше делаем проверку на тип
   priority: PriorityType
   order: number
   columnId: string

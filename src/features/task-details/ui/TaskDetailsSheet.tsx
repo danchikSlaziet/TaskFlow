@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Calendar } from '@/shared/ui/calendar'
 import { ru } from 'date-fns/locale'
-import { TiptapEditor } from '@/shared/ui/tiptap-editor'
 import type { JSONContent } from '@tiptap/react'
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 import {
   Calendar as CalendarIcon,
@@ -39,6 +40,14 @@ import {
   uploadFileAction,
 } from '../api/actions'
 import { useDebounce } from '@/shared/lib/useDebounce'
+
+const TiptapEditor = dynamic(
+  () => import('@/shared/ui/tiptap-editor').then((m) => m.TiptapEditor),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="min-h-[160px] w-full rounded-xl" />,
+  }
+)
 
 interface TaskDetailsSheetProps {
   task: TaskItem | null

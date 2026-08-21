@@ -66,9 +66,7 @@ export function KanbanBoard({ projectId, initialColumns }: KanbanBoardProps) {
     return columns.map((col) => ({
       ...col,
       tasks: col.tasks.filter((task) => {
-        const matchesSearch =
-          task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesPriority = selectedPriority === 'ALL' || task.priority === selectedPriority
         return matchesSearch && matchesPriority
       }),
