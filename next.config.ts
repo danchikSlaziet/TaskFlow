@@ -5,6 +5,11 @@ const BUILD_ID = process.env.BUILD_ID || Date.now().toString();
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb", // ← увеличиваем лимит до 10 МБ
+    },
+  },
   async headers() {
     return [
       {

@@ -1,6 +1,7 @@
-import { Card, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
+import { Card, CardHeader, CardTitle } from '@/shared/ui/card'
 import { GripVertical } from 'lucide-react'
 import type { PriorityType } from '../../model/schemas'
+import { JSONContent } from '@tiptap/react'
 
 export interface SubtaskItem {
   id: string
@@ -11,7 +12,7 @@ export interface SubtaskItem {
 export interface TaskItem {
   id: string
   title: string
-  description?: string | null
+  description?: JSONContent | null
   priority: PriorityType
   order: number
   columnId: string
@@ -61,13 +62,6 @@ export function TaskCard({ task, isDragging, dragHandleProps, onClick }: TaskCar
             <GripVertical className="h-4 w-4" />
           </div>
         </div>
-
-        {task.description && (
-          <CardDescription className="text-xs line-clamp-2 break-words [overflow-wrap:anywhere]">
-            {task.description}
-          </CardDescription>
-        )}
-
         <div className="flex items-center justify-between pt-1">
           <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] ${priority.className}`}>
             {priority.label}
